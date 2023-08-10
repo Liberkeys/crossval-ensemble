@@ -41,6 +41,33 @@ The easiest way to install crossval-ensemble is using ``pip``:
 
     pip install -U crossval-ensemble
 
+# How to use it
+
+An example of usage is given by [this notebook](https://www.kaggle.com/code/pathoumieu/crossvalidation-ensembles-from-top-23-to-top-12) on the [House Prices kaggle competition](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques) use case.
+
+Once datasets and preprocessing pipelines (`preprocess_mapper` in this case) are defined, it requires very few lines of code :
+
+    from crossval_ensemble.custom_pipeline import CustomTransformedTargetRegressor
+    from crossval_ensemble.crossval_pipeline import CrossvalRegressionPipeline
+
+    model = CrossvalRegressionPipeline(steps=[
+        ('prepro', preprocess_mapper),
+        ('estimator', CustomTransformedTargetRegressor(
+            regressor=CatBoostRegressor(
+                iterations=2000,
+                loss_function='RMSE',
+                eval_metric='RMSE',
+                use_best_model=True,
+                verbose=500,
+                random_seed=0
+            ),
+            transformer=None,
+        ))
+        ], n_folds=5)
+
+    model.fit(X_train, y_train, cat_features=CAT_COLS, early_stopping_rounds=100, plot=False)
+    preds = model.predict(X_test)
+
 # Source code
 
 You can check the latest sources with the command:
