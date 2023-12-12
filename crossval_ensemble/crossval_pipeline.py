@@ -33,11 +33,14 @@ class CrossvalPipeline(Pipeline):
         ----------
         X : pandas DataFrame
             Features
-        y : pandas Series
+        y : pandas Series or 1D numpy.ndarray
             Targets
         """
         self.fit_params = fit_params
-        y_reshaped = y.values
+        if isinstance(y, pd.Series):
+            y_reshaped = y.values
+        else:
+            y_reshaped = y.flatten()
         self.crossval_dict, self.feature_importance_dict = self.cross_validate(
             self.pipe_class,
             self.steps,
