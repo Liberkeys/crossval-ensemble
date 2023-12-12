@@ -24,6 +24,7 @@ class CrossvalPipeline(Pipeline):
         """
         super().__init__(steps, **init_param)
         self.n_folds = n_folds
+        self.is_fitted = False
 
     def fit(self, X, y, **fit_params):
         """Fit the CrossvalPipeline object
@@ -45,6 +46,7 @@ class CrossvalPipeline(Pipeline):
             self.n_folds,
             **fit_params
         )
+        self.is_fitted = True
 
     def predict(self, X):
         """Predict a fitted model
@@ -59,6 +61,8 @@ class CrossvalPipeline(Pipeline):
         np.array
             Predicted targets
         """
+        if not self.is_fitted:
+            raise ValueError('Please fit pipeline before predict.')
         y = 0
         for i in range(1, self.n_folds + 1):
             y += self.crossval_dict[f'fold{i}']['pipeline'].predict(X) / self.n_folds
