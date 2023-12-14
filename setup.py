@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='crossval_ensemble',
-    version='0.0.1',
+    version='0.0.2',
     description='A scikit-learn wrapper for CrossValidation Ensembles',
     long_description='CrossvalEnsemble is an ML library in Python that allows to create\
     CrossValidation Ensembles leveraging scikit-learn.',

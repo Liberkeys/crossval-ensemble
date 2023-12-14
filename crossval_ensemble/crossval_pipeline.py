@@ -24,6 +24,7 @@ class CrossvalPipeline(Pipeline):
         """
         super().__init__(steps, **init_param)
         self.n_folds = n_folds
+        self.is_fitted = False
 
     def fit(self, X, y, **fit_params):
         """Fit the CrossvalPipeline object
@@ -32,11 +33,14 @@ class CrossvalPipeline(Pipeline):
         ----------
         X : pandas DataFrame
             Features
-        y : pandas Series
+        y : pandas Series or 1D numpy.ndarray
             Targets
         """
         self.fit_params = fit_params
-        y_reshaped = y.values
+        if isinstance(y, pd.Series):
+            y_reshaped = y.values
+        else:
+            y_reshaped = y.flatten()
         self.crossval_dict, self.feature_importance_dict = self.cross_validate(
             self.pipe_class,
             self.steps,
@@ -45,6 +49,7 @@ class CrossvalPipeline(Pipeline):
             self.n_folds,
             **fit_params
         )
+        self.is_fitted = True
 
     def predict(self, X):
         """Predict a fitted model
@@ -59,6 +64,8 @@ class CrossvalPipeline(Pipeline):
         np.array
             Predicted targets
         """
+        if not self.is_fitted:
+            raise ValueError('Please fit pipeline before predict.')
         y = 0
         for i in range(1, self.n_folds + 1):
             y += self.crossval_dict[f'fold{i}']['pipeline'].predict(X) / self.n_folds
@@ -100,7 +107,6 @@ class CrossvalPipeline(Pipeline):
             kf = KFold(n_splits=n_folds, random_state=RANDOM_STATE, shuffle=True)
             kf_index_list = kf.split(X)
 
-        feature_importance = np.zeros(len(X.columns))
         crossval_dict = {}
         with tqdm(total=n_folds) as pbar:
             for i, (train_idx, valid_idx) in enumerate(kf_index_list):
@@ -114,17 +120,19 @@ class CrossvalPipeline(Pipeline):
                 crossval_dict[f'fold{i}']['pipeline'].fit(X_train, y_train, X_valid, y_valid, **fit_params)
                 crossval_dict[f'fold{i}']['features_importance'] = crossval_dict[f'fold{i}']['pipeline']\
                     .model_pipeline.get_feature_importance()
-                feature_importance += crossval_dict[f'fold{i}']['features_importance'] / n_folds
                 pbar.update(1)
+        feature_importance = np.mean([
+            fold_dict['features_importance'] for _, fold_dict in crossval_dict.items()
+            ], axis=0)
         columns = crossval_dict['fold1']['pipeline'].preprocess_pipeline[-1].transformed_names_
         return crossval_dict, dict(zip(columns, feature_importance))
 
-    def get_feature_importance(self, prettifier=False):
+    def get_feature_importance(self, prettified=False):
         """Get features importance figures
 
         Parameters
         ----------
-        prettifier : bool, optional
+        prettified : bool, optional
             False: return dictionnary with feature names as dict keys and importance as dict values
             True: return pandas DataFrame --> columns : [feature names , feature importance],
                 sorted byimportance in descending order
@@ -132,12 +140,12 @@ class CrossvalPipeline(Pipeline):
 
         Returns
         -------
-        Depends on prettifier value:
-            If prettifier is 'False' --> returns a dictionnary
-            If prettifier is 'True' --> returns a pandas DataFrame
+        Depends on prettified value:
+            If prettified is 'False' --> returns a dictionnary
+            If prettified is 'True' --> returns a pandas DataFrame
             Feature importances
         """
-        if not prettifier:
+        if not prettified:
             return self.feature_importance_dict
         else:
             df = pd.concat([
