@@ -45,6 +45,8 @@ The easiest way to install crossval-ensemble is using ``pip``:
 
 An example of usage is given by [this notebook](https://www.kaggle.com/code/pathoumieu/crossvalidation-ensembles-from-top-23-to-top-12) on the [House Prices kaggle competition](https://www.kaggle.com/competitions/house-prices-advanced-regression-techniques) use case.
 
+A good example is given in `tuto_notebook.ipynb` as well.
+
 Once datasets and preprocessing pipelines (`preprocess_mapper` in this case) are defined, it requires very few lines of code :
 
     from crossval_ensemble.custom_pipeline import CustomTransformedTargetRegressor
@@ -70,6 +72,6 @@ Once datasets and preprocessing pipelines (`preprocess_mapper` in this case) are
 
 # Source code
 
-You can check the latest sources with the command:
+You can check out the latest sources with the command:
 
     git clone https://github.com/Liberkeys/crossval-ensemble
